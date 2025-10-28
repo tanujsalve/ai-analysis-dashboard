@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard | AI Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js?v=3"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Page 1: Upload Page -->
+  <div id="page-upload" class="bricks-page active">
+    <div class="progress-steps">
+      <div class="step-dot"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <span class="step-text">Step 1 / 3</span>
+    </div>
+    
+    <div class="upload-page-content">
+      <button class="back-button"><i class="fas fa-arrow-left"></i> Back</button>
+      
+      <h1 class="upload-title">Add in your data</h1>
+      <p class="upload-subtitle">We'll create a dashboard out of the data you provide.</p>
+      
+      <div class="upload-cards">
+        <div class="upload-card import-card" id="import-card">
+          <div class="card-icon-big">
+            <i class="fas fa-file-upload"></i>
+          </div>
+          <h3>Import a file</h3>
+          <p>Extracts data from XLSX, CSV, PDF, PNG, JPG files</p>
+        </div>
+        
+        <div class="upload-card paste-card" id="paste-card">
+          <div class="card-icon-big">
+            <i class="fas fa-paste"></i>
+          </div>
+          <h3>Paste your data</h3>
+          <p>Copy and paste your data from other sources</p>
+        </div>
+      </div>
+      
+      <div class="ai-generated-hint">
+        <i class="fas fa-bolt"></i>
+        <span>Don't have data? Start with AI-generated data and import your own later.</span>
+      </div>
+      
+      <!-- Analytics Section -->
+      <div class="analytics-section" id="analytics-section" style="display: none;">
+        <h2 class="analytics-title">
+          <i class="fas fa-chart-line"></i>
+          Data Analytics
+        </h2>
+        
+        <div class="analytics-controls">
+          <button class="btn btn-primary" id="analyze-btn">
+            <i class="fas fa-brain"></i>
+            Analyze Data
+          </button>
+          <button class="btn btn-secondary" id="suggestions-btn">
+            <i class="fas fa-lightbulb"></i>
+            Get Suggestions
+          </button>
+          <button class="btn btn-outline" id="clear-analytics-btn">
+            <i class="fas fa-trash"></i>
+            Clear Analytics
+          </button>
+        </div>
+        
+        <div class="analytics-results" id="analytics-results">
+          <!-- Analytics results will be displayed here -->
+        </div>
+      </div>
+      
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls,.pdf,.png,.jpg" style="display: none;">
+    </div>
+  </div>
+
+  <!-- Page 2: Importing Animation -->
+  <div id="page-importing" class="bricks-page">
+    <div class="progress-steps">
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot active"></div>
+      <span class="step-text">Step 2 / 3</span>
+    </div>
+    
+    <div class="importing-content">
+      <h1 class="importing-title">Importing data with AI</h1>
+      <p class="importing-subtitle">This can take up to a minute or two for large files</p>
+      
+      <div class="file-info">
+        <i class="fas fa-file-csv"></i>
+        <span id="importing-filename">No file selected</span>
+      </div>
+      
+      <div class="import-progress-bar">
+        <div class="import-progress-fill" id="import-progress"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 3: AI Processing Page -->
+  <div id="page-processing" class="bricks-page">
+    <div class="bricks-app">
+      <div class="processing-sidebar">
+        <h3>• Generating dashboard...</h3>
+        <div class="generation-steps" id="generation-steps">
+          <div class="gen-step">
+            <span class="gen-step-name">Planning layout & blocks</span>
+            <div class="gen-step-status complete"><i class="fas fa-check"></i></div>
+          </div>
+          <div class="gen-step active">
+            <span class="gen-step-name">Creating blocks</span>
+            <div class="gen-step-progress">
+              <div class="gen-step-progress-fill" id="blocks-progress"></div>
+            </div>
+          </div>
+          <div class="gen-step waiting">
+            <span class="gen-step-name">Generating insights</span>
+            <div class="gen-step-status waiting"><i class="fas fa-clock"></i></div>
+          </div>
+          <div class="gen-step waiting">
+            <span class="gen-step-name">Generating summary</span>
+            <div class="gen-step-status waiting"><i class="fas fa-clock"></i></div>
+          </div>
+          <div class="gen-step waiting">
+            <span class="gen-step-name">Finalizing dashboard</span>
+            <div class="gen-step-status waiting"><i class="fas fa-clock"></i></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="processing-content">
+        <div class="ai-banner">
+          <i class="fas fa-bolt"></i>
+          <span>AI is generating, please don't navigate away</span>
+        </div>
+        
+        <h1 class="dashboard-title-loading">Titanic Passenger Survival & Demographics Dashboard</h1>
+        
+        <div class="skeleton-container" id="skeleton-container">
+          <div class="skeleton-item skeleton-header"></div>
+          <div class="skeleton-item skeleton-card tall"></div>
+          <div class="skeleton-item skeleton-card"></div>
+          <div class="skeleton-item skeleton-chart"></div>
+          <div class="skeleton-item skeleton-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 4: Dashboard Page -->
+  <div id="page-dashboard" class="bricks-page">
+    <div class="bricks-app">
+      <aside class="bricks-sidebar">
+        <div class="sidebar-header">
+          <div class="logo-cube-small">
+            <div class="cube-face face-front"></div>
+            <div class="cube-face face-top"></div>
+            <div class="cube-face face-right"></div>
+          </div>
+          <span>Bricks</span>
+        </div>
+        
+        <div class="dataset-header">
+          <span id="dataset-name">Your Dataset</span>
+          <i class="fas fa-sync-alt"></i>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <div class="nav-item active">
+            <i class="fas fa-robot"></i>
+            <span>AI Chat</span>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-upload"></i>
+            <span>Import</span>
+          </div>
+  </nav>
+        <div class="theme-selector">
+          <h4>Select a theme style:</h4>
+          <div class="theme-grid">
+            <div class="theme-option selected" data-theme="selected">
+              <div class="theme-bar blue"></div>
+              <span>Selected</span>
+      </div>
+            <div class="theme-option" data-theme="energetic">
+              <div class="theme-bar green"></div>
+              <span>Energetic</span>
+            </div>
+            <div class="theme-option" data-theme="professional">
+              <div class="theme-preview">
+                <div class="preview-bar blue-dark"></div>
+                <div class="preview-bar orange"></div>
+              </div>
+              <span>Professional</span>
+              <i class="fas fa-star premium"></i>
+            </div>
+            <div class="theme-option" data-theme="dark">
+              <div class="theme-preview">
+                <div class="preview-bar dark"></div>
+                <div class="preview-bar orange"></div>
+              </div>
+              <span>Dark</span>
+              <i class="fas fa-star premium"></i>
+            </div>
+          </div>
+          <a href="#" class="show-more-link">Show more</a>
+        </div>
+        
+        <div class="ai-chat-panel">
+          <div class="ai-input">
+            <input type="text" id="ai-chat-input" placeholder="Ask AI to do anything">
+            <button class="ai-btn send-btn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+      </div>
+
+        <div class="user-footer">
+          <div class="user-avatar"></div>
+          <span id="sidebar-username">User</span>
+          <button id="logout-sidebar"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+      </aside>
+      
+      <main class="dashboard-main-area">
+        <!-- Top Header Bar -->
+        <div class="dashboard-top-header">
+          <div class="header-left">
+            <div class="logo-cube-small">
+              <div class="cube-face face-front"></div>
+              <div class="cube-face face-top"></div>
+              <div class="cube-face face-right"></div>
+          </div>
+            <span class="header-brand">IRIS</span>
+            <span class="header-status">Dashboard is up to date</span>
+        </div>
+          <div class="header-right">
+            <button id="header-logout-btn" class="logout-header-btn">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+      </div>
+        </div>
+        
+        <!-- Scrollable Content -->
+        <div class="dashboard-scrollable">
+          <div class="dashboard-banner">
+            <h1 id="dashboard-main-title">Titanic Passenger Survival Analysis Dashboard</h1>
+          </div>
+          
+          <div id="dashboard-content" class="dashboard-content-area">
+            <!-- Dynamic content will be generated here -->
+          </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="dashboard-bottom-bar">
+          <div class="tab-item">
+            <i class="fas fa-file-csv"></i>
+            <span id="bottom-bar-file-name">IRIS.csv</span>
+          </div>
+          <div class="tab-item active">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </div>
+          <div class="tab-item" onclick="window.location.href='/ai_dashboard'">
+            <i class="fas fa-robot"></i>
+            <span>AI Dashboard</span>
+          </div>
+          <div class="tab-item">
+            <i class="fas fa-database"></i>
+            <span>Dashboard Data</span>
+            <i class="fas fa-lock"></i>
+          </div>
+          <button class="tab-add-btn">+</button>
+        </div>
+  </main>
+    </div>
+</div>
+
+<script>
+let currentUser = null;
+let currentFile = null;
+let currentPage = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const userData = localStorage.getItem('currentUser');
+  if (!userData) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  currentUser = JSON.parse(userData);
+  document.getElementById('sidebar-username').textContent = currentUser.name;
+
+  setupEventListeners();
+  
+  // Check if there's a saved dashboard
+  const savedDashboard = localStorage.getItem('savedDashboard');
+  const savedDatasetName = localStorage.getItem('savedDatasetName');
+  if (savedDashboard && savedDatasetName) {
+    currentFile = { name: savedDatasetName + '.csv' };
+    document.getElementById('dataset-name').textContent = savedDatasetName;
+    showPage(4);
+    loadDashboard();
+  }
+});
+
+function setupEventListeners() {
+  // Upload cards
+  document.getElementById('import-card').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+  });
+
+  document.getElementById('paste-card').addEventListener('click', () => {
+    showPasteDialog();
+  });
+  
+  // File input
+  document.getElementById('file-input').addEventListener('change', handleFileSelect);
+  
+  // AI input
+  document.getElementById('ai-chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendAICommand();
+    }
+  });
+  
+  document.querySelector('.send-btn').addEventListener('click', sendAICommand);
+  
+  // Theme selection using event delegation
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.theme-option')) {
+      const option = e.target.closest('.theme-option');
+      const themeOptions = document.querySelectorAll('.theme-option');
+      themeOptions.forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      applyTheme(option.dataset.theme);
+    }
+  });
+
+  // Logout
+  document.getElementById('logout-sidebar').addEventListener('click', logout);
+  document.getElementById('header-logout-btn').addEventListener('click', logout);
+  
+  // Navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      
+      if (this.querySelector('span').textContent === 'Import') {
+        showPage(1);
+      } else if (this.querySelector('span').textContent === 'Generate') {
+        if (!currentFile) {
+          showPage(1);
+        } else {
+          showPage(3);
+        }
+      }
+    });
+  });
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) {
+    currentFile = file;
+    document.getElementById('importing-filename').textContent = file.name;
+    
+    // Update dataset name throughout the app
+    const datasetName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+    document.getElementById('dataset-name').textContent = datasetName;
+    
+    showPage(2);
+    startImportAnimation();
+  }
+}
+
+function startImportAnimation() {
+  let progress = 0;
+  const progressBar = document.getElementById('import-progress');
+  
+  const interval = setInterval(() => {
+    progress += 2;
+    progressBar.style.width = progress + '%';
+    
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => {
+        showPage(3);
+        startProcessingAnimation();
+      }, 500);
+    }
+  }, 100);
+}
+
+function startProcessingAnimation() {
+  const steps = document.querySelectorAll('.gen-step');
+  let currentStepIndex = 1;
+  
+  // Update dataset name
+  if (currentFile) {
+    const datasetName = currentFile.name.replace(/\.[^/.]+$/, ""); // Remove extension
+    document.getElementById('dataset-name').textContent = datasetName;
+    document.querySelector('.dashboard-title-loading').textContent = datasetName + ' Dashboard';
+  }
+  
+  // Animate blocks progress
+  const blocksProgress = document.getElementById('blocks-progress');
+  let progress = 0;
+  
+  const blockInterval = setInterval(() => {
+    progress += 5;
+    blocksProgress.style.width = progress + '%';
+    
+    if (progress >= 100) {
+      clearInterval(blockInterval);
+      
+      // Mark current step as complete
+      steps[currentStepIndex].classList.remove('active');
+      steps[currentStepIndex].classList.add('complete');
+      
+      // Remove progress bar if it exists and add status
+      const progressDiv = steps[currentStepIndex].querySelector('.gen-step-progress');
+      if (progressDiv) {
+        progressDiv.innerHTML = '<div class="gen-step-status complete"><i class="fas fa-check"></i></div>';
+      } else {
+        const statusDiv = steps[currentStepIndex].querySelector('.gen-step-status');
+        if (statusDiv) {
+          statusDiv.classList.add('complete');
+          statusDiv.innerHTML = '<i class="fas fa-check"></i>';
+        }
+      }
+      
+      // Move to next step
+      currentStepIndex++;
+      if (currentStepIndex < steps.length) {
+        steps[currentStepIndex].classList.remove('waiting');
+        steps[currentStepIndex].classList.add('active');
+        
+        // Step 2: Generating insights
+        setTimeout(() => {
+          const progressDiv2 = steps[currentStepIndex].querySelector('.gen-step-progress');
+          if (progressDiv2) {
+            progressDiv2.innerHTML = '<div class="gen-step-status complete"><i class="fas fa-check"></i></div>';
+          }
+          steps[currentStepIndex].classList.remove('active');
+          steps[currentStepIndex].classList.add('complete');
+          
+          currentStepIndex++;
+          if (currentStepIndex < steps.length) {
+            steps[currentStepIndex].classList.remove('waiting');
+            steps[currentStepIndex].classList.add('active');
+            
+            // Step 3: Generating summary
+            setTimeout(() => {
+              const statusDiv = steps[currentStepIndex].querySelector('.gen-step-status');
+              if (statusDiv) {
+                statusDiv.classList.add('complete');
+                statusDiv.innerHTML = '<i class="fas fa-check"></i>';
+              }
+              steps[currentStepIndex].classList.remove('active');
+              steps[currentStepIndex].classList.add('complete');
+              
+              currentStepIndex++;
+              if (currentStepIndex < steps.length) {
+                steps[currentStepIndex].classList.remove('waiting');
+                steps[currentStepIndex].classList.add('active');
+                
+                // Step 4: Finalizing dashboard
+                setTimeout(() => {
+                  const statusDiv = steps[currentStepIndex].querySelector('.gen-step-status');
+                  if (statusDiv) {
+                    statusDiv.classList.add('complete');
+                    statusDiv.innerHTML = '<i class="fas fa-check"></i>';
+                  }
+                  steps[currentStepIndex].classList.remove('active');
+                  steps[currentStepIndex].classList.add('complete');
+                  
+                  setTimeout(() => {
+                    showPage(4);
+                    loadDashboard();
+                  }, 500);
+                }, 1000);
+              }
+            }, 1000);
+          }
+        }, 1500);
+      }
+    }
+  }, 80);
+}
+
+function loadDashboard() {
+  // Get dataset name
+  let datasetName = "Your Dataset";
+  if (currentFile) {
+    datasetName = currentFile.name.replace(/\.[^/.]+$/, ""); // Remove extension
+    document.getElementById('dataset-name').textContent = datasetName;
+    // Update bottom bar filename
+    document.getElementById('bottom-bar-file-name').textContent = currentFile.name;
+    
+    // Upload the file to server
+    uploadFileToServer();
+  }
+  
+  // Show analytics section
+  showAnalyticsSection();
+  
+  const dashboardData = {
+    title: datasetName + " Dashboard",
+    overview: "This dashboard provides a comprehensive analysis of your dataset, focusing on key insights and patterns. It visualizes data across multiple dimensions, highlights important patterns, and surfaces actionable insights.",
+    charts: [
+      {
+        type: 'bar',
+        title: 'Overall Survival Distribution',
+        data: [549, 342],
+        labels: ['Did Not Survive', 'Survived'],
+        colors: ['#3B82F6', '#3B82F6']
+      },
+      {
+        type: 'bar',
+        title: 'Survival Count by Passenger Class',
+        data: [136, 87, 119],
+        labels: ['Class 1', 'Class 2', 'Class 3'],
+        colors: ['#10B981', '#3B82F6', '#F59E0B']
+      }
+    ],
+    insights: [
+      "Majority did not survive: 549 non-survivors vs 342 survivors (~61% deaths)",
+      "Third class had the highest number of non-survivors (372) and total passengers, while first class had the highest number of survivors (136) and best survival-to-death ratio",
+      "Females had a higher survival count (233) than males (109), while males had a much higher non-survival count (468)",
+      "Higher fare and higher class correlate with better survival, with first class having the highest average fare and survival rate"
+    ]
+  };
+  
+  localStorage.setItem('savedDashboard', JSON.stringify(dashboardData));
+  localStorage.setItem('savedDatasetName', datasetName);
+  renderDashboard(dashboardData);
+}
+
+function renderDashboard(data) {
+  // Update dashboard title
+  const dashboardTitle = document.getElementById('dashboard-main-title');
+  dashboardTitle.textContent = data.title;
+  
+  const container = document.getElementById('dashboard-content');
+  container.innerHTML = '';
+  
+  // Overview
+  const overview = document.createElement('div');
+  overview.className = 'dashboard-block-text';
+  overview.innerHTML = `
+    <h2>Overview</h2>
+    <p>${data.overview}</p>
+  `;
+  container.appendChild(overview);
+  
+  // Charts
+  data.charts.forEach((chart, index) => {
+    const chartBlock = document.createElement('div');
+    chartBlock.className = 'dashboard-block-chart';
+    chartBlock.innerHTML = `
+      <h3>${chart.title}</h3>
+      <div class="chart-wrapper">
+        <canvas id="chart-${index}"></canvas>
+      </div>
+    `;
+    container.appendChild(chartBlock);
+    
+    setTimeout(() => {
+      createChart(`chart-${index}`, chart);
+    }, 100);
+  });
+  
+  // Insights
+  const insights = document.createElement('div');
+  insights.className = 'dashboard-block-insights';
+  insights.innerHTML = `
+    <h3>Key Insights</h3>
+    <ul>
+      ${data.insights.map(insight => `<li>${insight}</li>`).join('')}
+    </ul>
+  `;
+  container.appendChild(insights);
+}
+
+function createChart(canvasId, chartData) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+    type: chartData.type,
+          data: {
+      labels: chartData.labels,
+            datasets: [{
+        label: chartData.title,
+        data: chartData.data,
+        backgroundColor: chartData.colors
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+        legend: { display: false }
+            }
+          }
+        });
+      }
+
+function applyTheme(theme) {
+  document.body.className = '';
+  document.body.classList.add('theme-' + theme);
+}
+
+function showPage(pageNumber) {
+  currentPage = pageNumber;
+  document.querySelectorAll('.bricks-page').forEach(page => {
+    page.classList.remove('active');
+  });
+  
+  if (pageNumber === 1) {
+    document.getElementById('page-upload').classList.add('active');
+  } else if (pageNumber === 2) {
+    document.getElementById('page-importing').classList.add('active');
+  } else if (pageNumber === 3) {
+    document.getElementById('page-processing').classList.add('active');
+  } else if (pageNumber === 4) {
+    document.getElementById('page-dashboard').classList.add('active');
+    // Initialize default theme
+    applyTheme('selected');
+  }
+}
+
+function showPasteDialog() {
+  const pasteData = prompt('Paste your CSV data here:');
+  if (pasteData) {
+    currentFile = { name: 'pasted-data.csv' };
+    document.getElementById('importing-filename').textContent = 'pasted-data.csv';
+    
+    // Update dataset name
+    document.getElementById('dataset-name').textContent = 'Pasted Data';
+    
+    showPage(2);
+    startImportAnimation();
+  }
+}
+
+function sendAICommand() {
+  const input = document.getElementById('ai-chat-input');
+  const command = input.value.trim();
+  if (!command) return;
+  
+  // Add command to list
+  const commandBtn = document.createElement('div');
+  commandBtn.className = 'ai-command-btn';
+  commandBtn.innerHTML = `
+    <span>${command}</span>
+    <i class="fas fa-check-circle green-check"></i>
+  `;
+  
+  const chatPanel = document.querySelector('.ai-chat-panel');
+  const existingCommands = chatPanel.querySelectorAll('.ai-command-btn');
+  if (existingCommands.length === 1) {
+    existingCommands[0].remove();
+  }
+  chatPanel.insertBefore(commandBtn, chatPanel.querySelector('.ai-remaining'));
+  
+  input.value = '';
+  
+  // Simulate AI processing
+  setTimeout(() => {
+    alert('Dashboard updated based on your request!');
+  }, 1500);
+}
+
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+  localStorage.removeItem('currentUser');
+  window.location.href = 'login.html';
+  }
+}
+
+// Analytics functionality
+let currentFileId = null;
+
+function uploadFileToServer() {
+  if (!currentFile) {
+    console.error('No file selected');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', currentFile);
+
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.file_id) {
+      currentFileId = data.file_id;
+      console.log('File uploaded successfully:', data);
+      
+      // Show success message
+      const analyticsResults = document.getElementById('analytics-results');
+      if (analyticsResults) {
+        analyticsResults.innerHTML = `
+          <div class="analytics-card">
+            <h3><i class="fas fa-check-circle"></i> File Uploaded Successfully</h3>
+            <p>File "${currentFile.name}" has been uploaded and is ready for analysis.</p>
+            <div class="quality-item">
+              <span class="quality-label">Rows</span>
+              <span class="quality-value">${data.row_count}</span>
+            </div>
+            <div class="quality-item">
+              <span class="quality-label">Columns</span>
+              <span class="quality-value">${data.columns.length}</span>
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      console.error('Upload failed:', data.error);
+      showErrorAnalytics('Upload failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Upload error:', error);
+    showErrorAnalytics('Upload failed: ' + error.message);
+  });
+}
+
+function showAnalyticsSection() {
+  const analyticsSection = document.getElementById('analytics-section');
+  if (analyticsSection) {
+    analyticsSection.style.display = 'block';
+  }
+}
+
+function hideAnalyticsSection() {
+  const analyticsSection = document.getElementById('analytics-section');
+  if (analyticsSection) {
+    analyticsSection.style.display = 'none';
+  }
+}
+
+function clearAnalyticsResults() {
+  const resultsContainer = document.getElementById('analytics-results');
+  if (resultsContainer) {
+    resultsContainer.innerHTML = '';
+  }
+}
+
+function showLoadingAnalytics() {
+  const resultsContainer = document.getElementById('analytics-results');
+  if (resultsContainer) {
+    resultsContainer.innerHTML = `
+      <div class="loading-analytics">
+        <i class="fas fa-spinner"></i>
+        <p>Analyzing your data...</p>
+      </div>
+    `;
+  }
+}
+
+function showErrorAnalytics(message) {
+  const resultsContainer = document.getElementById('analytics-results');
+  if (resultsContainer) {
+    resultsContainer.innerHTML = `
+      <div class="error-analytics">
+        <i class="fas fa-exclamation-triangle"></i>
+        ${message}
+      </div>
+    `;
+  }
+}
+
+function displayAnalyticsResults(data) {
+  const resultsContainer = document.getElementById('analytics-results');
+  if (!resultsContainer) return;
+
+  let html = '';
+
+  // Data Summary
+  if (data.data_summary) {
+    html += `
+      <div class="analytics-card">
+        <h3><i class="fas fa-info-circle"></i> Data Summary</h3>
+        <div class="quality-item">
+          <span class="quality-label">Total Rows</span>
+          <span class="quality-value">${data.data_summary.total_rows}</span>
+        </div>
+        <div class="quality-item">
+          <span class="quality-label">Total Columns</span>
+          <span class="quality-value">${data.data_summary.total_columns}</span>
+        </div>
+        <div class="quality-item">
+          <span class="quality-label">Memory Usage</span>
+          <span class="quality-value">${data.data_summary.memory_usage}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // Statistical Insights
+  if (data.statistical_insights && data.statistical_insights.length > 0) {
+    html += `
+      <div class="analytics-card">
+        <h3><i class="fas fa-chart-bar"></i> Statistical Insights</h3>
+    `;
+    data.statistical_insights.forEach(insight => {
+      html += `
+        <div class="insight-item">
+          <div class="insight-title">${insight.title}</div>
+          <div class="insight-description">${insight.description}</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // Data Quality
+  if (data.data_quality) {
+    html += `
+      <div class="analytics-card">
+        <h3><i class="fas fa-shield-alt"></i> Data Quality</h3>
+    `;
+    
+    if (data.data_quality.duplicate_rows > 0) {
+      html += `
+        <div class="quality-item">
+          <span class="quality-label">Duplicate Rows</span>
+          <span class="quality-value">${data.data_quality.duplicate_rows}</span>
+        </div>
+      `;
+    }
+
+    if (Object.keys(data.data_quality.missing_data).length > 0) {
+      Object.entries(data.data_quality.missing_data).forEach(([col, info]) => {
+        html += `
+          <div class="quality-item">
+            <span class="quality-label">Missing in ${col}</span>
+            <span class="quality-value">${info.count} (${info.percentage.toFixed(1)}%)</span>
+          </div>
+        `;
+      });
+    }
+    
+    html += `</div>`;
+  }
+
+  // Pattern Analysis
+  if (data.pattern_analysis && data.pattern_analysis.length > 0) {
+    html += `
+      <div class="analytics-card">
+        <h3><i class="fas fa-search"></i> Pattern Analysis</h3>
+    `;
+    data.pattern_analysis.forEach(pattern => {
+      html += `
+        <div class="insight-item">
+          <div class="insight-title">${pattern.title}</div>
+          <div class="insight-description">${pattern.description}</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // Recommendations
+  if (data.recommendations && data.recommendations.length > 0) {
+    html += `
+      <div class="analytics-card">
+        <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+    `;
+    data.recommendations.forEach(rec => {
+      html += `
+        <div class="recommendation-item">
+          <i class="fas fa-arrow-right"></i> ${rec}
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  resultsContainer.innerHTML = html;
+}
+
+function displayVisualizationSuggestions(suggestions) {
+  const resultsContainer = document.getElementById('analytics-results');
+  if (!resultsContainer) return;
+
+  let html = `
+    <div class="analytics-card">
+      <h3><i class="fas fa-chart-line"></i> Visualization Suggestions</h3>
+  `;
+
+  suggestions.forEach(suggestion => {
+    html += `
+      <div class="suggestion-item" onclick="createVisualization('${suggestion.type}', ${JSON.stringify(suggestion.columns).replace(/"/g, '&quot;')})">
+        <div class="suggestion-title">${suggestion.title}</div>
+        <div class="suggestion-description">${suggestion.description}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  resultsContainer.innerHTML = html;
+}
+
+function createVisualization(chartType, columns) {
+  if (!currentFileId) {
+    showErrorAnalytics('No file selected for visualization');
+    return;
+  }
+
+  showLoadingAnalytics();
+
+  fetch('/api/analytics/visualize', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      file_id: currentFileId,
+      chart_type: chartType,
+      columns: columns
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      showErrorAnalytics(data.error);
+    } else {
+      // Create chart container
+      const resultsContainer = document.getElementById('analytics-results');
+      resultsContainer.innerHTML = `
+        <div class="analytics-card">
+          <h3><i class="fas fa-chart-${chartType === 'pie_chart' ? 'pie' : 'bar'}"></i> ${data.title}</h3>
+          <canvas id="analytics-chart" width="400" height="200"></canvas>
+        </div>
+      `;
+
+      // Create chart
+      const ctx = document.getElementById('analytics-chart').getContext('2d');
+      new Chart(ctx, {
+        type: data.type,
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: data.title,
+            data: data.data,
+            backgroundColor: data.colors,
+            borderColor: data.colors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+  })
+  .catch(error => {
+    showErrorAnalytics('Failed to create visualization: ' + error.message);
+  });
+}
+
+// Event listeners for analytics buttons
+document.addEventListener('DOMContentLoaded', function() {
+  const analyzeBtn = document.getElementById('analyze-btn');
+  const suggestionsBtn = document.getElementById('suggestions-btn');
+  const clearBtn = document.getElementById('clear-analytics-btn');
+
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', function() {
+      if (!currentFileId) {
+        showErrorAnalytics('Please upload a file first');
+        return;
+      }
+
+      showLoadingAnalytics();
+
+      fetch('/api/analytics/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file_id: currentFileId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          displayAnalyticsResults(data);
+        } else {
+          showErrorAnalytics(data.error || 'Analysis failed');
+        }
+      })
+      .catch(error => {
+        showErrorAnalytics('Failed to analyze data: ' + error.message);
+      });
+    });
+  }
+
+  if (suggestionsBtn) {
+    suggestionsBtn.addEventListener('click', function() {
+      if (!currentFileId) {
+        showErrorAnalytics('Please upload a file first');
+        return;
+      }
+
+      showLoadingAnalytics();
+
+      fetch('/api/analytics/suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file_id: currentFileId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.suggestions) {
+          displayVisualizationSuggestions(data.suggestions);
+        } else {
+          showErrorAnalytics(data.error || 'Failed to get suggestions');
+        }
+      })
+      .catch(error => {
+        showErrorAnalytics('Failed to get suggestions: ' + error.message);
+      });
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      clearAnalyticsResults();
+    });
+  }
+});
+</script>
+
+<style>
+/* Reset and Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
+  background: #ffffff;
+}
+
+/* Pages */
+.bricks-page {
+  display: none;
+  min-height: 100vh;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bricks-page.active {
+  display: block;
+}
+
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.step-dot {
+  width: 32px;
+  height: 3px;
+  background: #e5e7eb;
+  border-radius: 2px;
+}
+
+.step-dot.active {
+  background: #3b82f6;
+}
+
+.step-text {
+  margin-left: 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* Page 1: Upload */
+.upload-page-content {
+  text-align: center;
+}
+
+.back-button {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.upload-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.upload-subtitle {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin-bottom: 3rem;
+}
+
+.upload-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto 2rem;
+}
+
+.upload-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.import-card {
+  border-color: #3b82f6;
+}
+
+.paste-card {
+  border-color: #10b981;
+}
+
+.card-icon-big {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  color: #667eea;
+}
+
+.upload-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.upload-card p {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.ai-generated-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.ai-generated-hint:hover {
+  background: #f3f4f6;
+}
+
+/* Page 2: Importing */
+.importing-content {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-top: 4rem;
+}
+
+.importing-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.importing-subtitle {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin-bottom: 3rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.file-info i {
+  color: #3b82f6;
+}
+
+.import-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.import-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* Page 3: Processing */
+#page-processing .bricks-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.processing-sidebar {
+  width: 320px;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 1.5rem;
+}
+
+.processing-sidebar h3 {
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+}
+
+.generation-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gen-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gen-step-name {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.gen-step.active .gen-step-name {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.gen-step.complete .gen-step-name {
+  color: #10b981;
+}
+
+.gen-step-progress {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.gen-step-progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.gen-step-status {
+  font-size: 0.9rem;
+}
+
+.gen-step-status.complete {
+  color: #10b981;
+}
+
+.gen-step-status.waiting {
+  color: #d1d5db;
+}
+
+.processing-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+.ai-banner {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-title-loading {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+}
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skeleton-item {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+.skeleton-header {
+  height: 60px;
+}
+
+.skeleton-card.tall {
+  height: 200px;
+}
+
+.skeleton-card {
+  height: 150px;
+}
+
+.skeleton-chart {
+  height: 300px;
+}
+
+.skeleton-list {
+  height: 120px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Page 4: Dashboard */
+.bricks-page#page-dashboard {
+  display: none;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.bricks-page#page-dashboard.active {
+  display: flex;
+}
+
+#page-dashboard .bricks-app {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#page-dashboard .bricks-sidebar {
+  width: 280px;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+#page-dashboard .sidebar-header {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#page-dashboard .logo-cube-small {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+#page-dashboard .cube-face {
+  position: absolute;
+  border-radius: 4px;
+}
+
+#page-dashboard .face-front {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  transform: translateZ(10px);
+}
+
+#page-dashboard .face-top {
+  width: 20px;
+  height: 10px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transform: rotateX(90deg) translateZ(10px);
+  transform-origin: top;
+}
+
+#page-dashboard .face-right {
+  width: 10px;
+  height: 20px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  transform: rotateY(90deg) translateZ(10px);
+  transform-origin: right;
+}
+
+#page-dashboard .dataset-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #111827;
+}
+
+#page-dashboard .sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0;
+}
+
+#page-dashboard .nav-item {
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+#page-dashboard .nav-item:hover {
+  background: #f3f4f6;
+  color: #3b82f6;
+}
+
+#page-dashboard .nav-item.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border-left: 3px solid #3b82f6;
+}
+
+#page-dashboard .dashboard-created-box {
+  padding: 1rem 1.5rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.retry-btn-small, .update-btn-small {
+  padding: 0.4rem 0.8rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#page-dashboard .theme-selector {
+  padding: 1rem 1.5rem;
+}
+
+#page-dashboard .theme-selector h4 {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+#page-dashboard .theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#page-dashboard .theme-option {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+#page-dashboard .theme-option:hover {
+  border-color: #3b82f6;
+}
+
+#page-dashboard .theme-option.selected {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+#page-dashboard .theme-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+#page-dashboard .theme-bar.blue {
+  background: #3b82f6;
+}
+
+#page-dashboard .theme-bar.green {
+  background: #10b981;
+}
+
+#page-dashboard .theme-preview {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+
+#page-dashboard .preview-bar {
+  flex: 1;
+  height: 20px;
+  border-radius: 4px;
+}
+
+#page-dashboard .preview-bar.blue-dark {
+  background: #1e3a5f;
+}
+
+#page-dashboard .preview-bar.orange {
+  background: #f59e0b;
+}
+
+#page-dashboard .preview-bar.dark {
+  background: #2d3436;
+}
+
+#page-dashboard .theme-option span {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+#page-dashboard .premium {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: #fbbf24;
+  font-size: 0.7rem;
+}
+
+#page-dashboard .show-more-link {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+#page-dashboard .ai-chat-panel {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+}
+
+#page-dashboard .ai-command-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#page-dashboard .ai-command-btn:hover {
+  border-color: #3b82f6;
+}
+
+#page-dashboard .green-check {
+  color: #10b981;
+}
+
+#page-dashboard .ai-remaining {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: #fef3c7;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.upgrade-btn {
+  padding: 0.25rem 0.75rem;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+#page-dashboard .ai-input {
+  display: flex;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+#page-dashboard .ai-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#page-dashboard .ai-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f9fafb;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+#page-dashboard .ai-btn:hover {
+  background: #f3f4f6;
+}
+
+#page-dashboard .send-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+#page-dashboard .send-btn:hover {
+  background: #2563eb;
+}
+
+#page-dashboard .user-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#page-dashboard .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+#page-dashboard .user-footer button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+.dashboard-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.dashboard-top-header {
+  background: white;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-brand {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.header-status {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-btn {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.header-btn:hover {
+  background: #f9fafb;
+}
+
+.zoom-indicator {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 0 0.5rem;
+}
+
+.unlock-premium-btn {
+  padding: 0.5rem 1rem;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unlock-premium-btn:hover {
+  background: #7c3aed;
+}
+
+.logout-header-btn {
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.logout-header-btn:hover {
+  background: #dc2626;
+}
+
+.dashboard-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dashboard-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dashboard-banner h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.dashboard-bottom-bar {
+  background: #1f2937;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.tab-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.tab-item.active {
+  color: white;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 4px;
+}
+
+.tab-add-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(59, 130, 246, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: #60a5fa;
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin-left: auto;
+  transition: all 0.2s;
+}
+
+.tab-add-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.dashboard-content-area {
+  padding: 2rem;
+}
+
+.dashboard-block-text, .dashboard-block-chart, .dashboard-block-insights {
+  background: white;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s;
+}
+
+.dashboard-block-chart {
+  max-width: 600px;
+  padding: 1rem;
+}
+
+.chart-wrapper {
+  height: 200px;
+  width: 100%;
+  position: relative;
+}
+
+.chart-wrapper canvas {
+  max-width: 100%;
+  height: 200px !important;
+}
+
+.dashboard-block-text:hover, .dashboard-block-chart:hover, .dashboard-block-insights:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.dashboard-block-text h2, .dashboard-block-chart h3, .dashboard-block-insights h3 {
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.dashboard-block-chart h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-block-text p {
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+.dashboard-block-insights ul {
+  list-style: none;
+  padding: 0;
+}
+
+.dashboard-block-insights li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.dashboard-block-insights li:last-child {
+  border-bottom: none;
+}
+
+.dashboard-block-insights li::before {
+  content: "•";
+  color: #667eea;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+  margin-right: 0.5rem;
+}
+
+/* Theme Styles */
+.theme-selected .dashboard-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.theme-energetic .dashboard-banner {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.theme-professional .dashboard-banner {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+}
+
+.theme-dark .dashboard-banner {
+  background: linear-gradient(135deg, #2d3436 0%, #1a1d20 100%);
+}
+
+.theme-energetic .dashboard-block-insights li::before {
+  color: #10b981;
+}
+
+.theme-professional .dashboard-block-insights li::before {
+  color: #1e40af;
+}
+
+.theme-dark .dashboard-block-insights li::before {
+  color: #f59e0b;
+}
+
+.theme-selected .dashboard-block-chart,
+.theme-selected .dashboard-block-text,
+.theme-selected .dashboard-block-insights {
+  border-color: #667eea;
+}
+
+.theme-energetic .dashboard-block-chart,
+.theme-energetic .dashboard-block-text,
+.theme-energetic .dashboard-block-insights {
+  border-color: #10b981;
+}
+
+.theme-professional .dashboard-block-chart,
+.theme-professional .dashboard-block-text,
+.theme-professional .dashboard-block-insights {
+  border-color: #1e40af;
+}
+
+.theme-dark .dashboard-block-chart,
+.theme-dark .dashboard-block-text,
+.theme-dark .dashboard-block-insights {
+  border-color: #374151;
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.theme-dark .dashboard-block-text h2,
+.theme-dark .dashboard-block-chart h3,
+.theme-dark .dashboard-block-insights h3 {
+  color: #f9fafb;
+}
+
+.theme-dark .dashboard-block-text p,
+.theme-dark .dashboard-block-insights li {
+  color: #d1d5db;
+}
+
+/* Update chart colors based on theme */
+.theme-energetic .chart-wrapper canvas {
+  filter: hue-rotate(120deg);
+}
+
+.theme-professional .chart-wrapper canvas {
+  filter: hue-rotate(240deg) saturate(0.8);
+}
+
+.theme-dark .chart-wrapper canvas {
+  filter: brightness(0.9) contrast(1.2) saturate(0.8);
+}
+
+/* Analytics Section Styles */
+.analytics-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.analytics-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.analytics-title i {
+  color: #3b82f6;
+}
+
+.analytics-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.analytics-controls .btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analytics-controls .btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.analytics-controls .btn-primary:hover {
+  background: #2563eb;
+}
+
+.analytics-controls .btn-secondary {
+  background: #10b981;
+  color: white;
+  border: none;
+}
+
+.analytics-controls .btn-secondary:hover {
+  background: #059669;
+}
+
+.analytics-controls .btn-outline {
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.analytics-controls .btn-outline:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.analytics-results {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.analytics-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analytics-card h3 i {
+  color: #3b82f6;
+}
+
+.insight-item {
+  padding: 1rem;
+  background: #f0f9ff;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+  margin-bottom: 1rem;
+}
+
+.insight-item:last-child {
+  margin-bottom: 0;
+}
+
+.insight-title {
+  font-weight: 600;
+  color: #0369a1;
+  margin-bottom: 0.5rem;
+}
+
+.insight-description {
+  color: #374151;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.quality-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.quality-item:last-child {
+  margin-bottom: 0;
+}
+
+.quality-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.quality-value {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.suggestion-item {
+  padding: 1rem;
+  background: #f0fdf4;
+  border-radius: 6px;
+  border-left: 4px solid #10b981;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+  background: #ecfdf5;
+  transform: translateX(4px);
+}
+
+.suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+.suggestion-title {
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 0.5rem;
+}
+
+.suggestion-description {
+  color: #374151;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.recommendation-item {
+  padding: 0.75rem;
+  background: #fef3c7;
+  border-radius: 6px;
+  border-left: 4px solid #f59e0b;
+  margin-bottom: 0.5rem;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.recommendation-item:last-child {
+  margin-bottom: 0;
+}
+
+.loading-analytics {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.loading-analytics i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.error-analytics {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .analytics-controls {
+    flex-direction: column;
+  }
+  
+  .analytics-controls .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .analytics-section {
+    padding: 1rem;
+  }
+}
+</style>
+</body>
+</html>

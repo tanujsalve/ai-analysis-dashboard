@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bricks - AI Data Analyst</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <div class="cube">
+            <div class="cube-face face-front"></div>
+            <div class="cube-face face-top"></div>
+            <div class="cube-face face-right"></div>
+          </div>
+        </div>
+        <span class="logo-text">IntelleX</span>
+      </div>
+      <nav class="header-nav">
+        <a href="login.html" class="btn btn-login">Login</a>
+        <a href="register.html" class="btn btn-get-started">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Your AI data analyst to create <span class="highlight">dashboards and reports</span>
+        </h1>
+        <p class="hero-description">
+          Bricks is the easiest way to turn your CSV & Excel files into beautiful, editable dashboards - no setup required.
+        </p>
+        <button class="btn btn-primary" id="upload-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Upload CSV or Excel file
+        </button>
+        <p class="security-badge">
+          Fully encrypted, private & secure
+        </p>
+      </div>
+      <div class="hero-video">
+        <div class="video-container">
+          <video id="demo-video" class="demo-video" controls autoplay muted loop>
+            <source src="demo-video.mp4" type="video/mp4">
+            <source src="demo-video.webm" type="video/webm">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section class="comparison">
+    <div class="comparison-container">
+      <div class="comparison-card">
+        <div class="card-icon excel-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#217346">
+            <path d="M3 2h18a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+            <path d="M8 8h8v2H8zm0 3h8v2H8zm0 3h5v2H8z" fill="white"/>
+          </svg>
+        </div>
+        <h3 class="card-title">Excel dashboards are too manual</h3>
+        <p class="card-description">Requires hours of manual chart building, formatting, and advanced Excel work.</p>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="card-icon canva-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="url(#canva-gradient)"/>
+            <circle cx="20" cy="18" r="6" fill="white"/>
+            <circle cx="20" cy="22" r="3" fill="white"/>
+            <defs>
+              <linearGradient id="canva-gradient" x1="0" y1="0" x2="40" y2="40">
+                <stop offset="0%" stop-color="#FF0055"/>
+                <stop offset="100%" stop-color="#00C6FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h3 class="card-title">Canva doesn't handle data well</h3>
+        <p class="card-description">Great for visuals. But anything beyond 1-2 basic charts requires tons of data entry.</p>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="card-icon tableau-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="#E97627"/>
+            <g stroke="#fff" stroke-width="2" fill="none">
+              <line x1="8" y1="30" x2="8" y2="10"/>
+              <line x1="18" y1="30" x2="18" y2="10"/>
+              <line x1="8" y1="10" x2="18" y2="10"/>
+              <line x1="8" y1="30" x2="18" y2="30"/>
+            </g>
+            <g stroke="#fff" stroke-width="2" fill="none">
+              <line x1="22" y1="30" x2="22" y2="10"/>
+              <line x1="32" y1="30" x2="32" y2="10"/>
+              <line x1="22" y1="10" x2="32" y2="10"/>
+              <line x1="22" y1="30" x2="32" y2="30"/>
+            </g>
+          </svg>
+        </div>
+        <h3 class="card-title">Tableau & PowerBI are too complex</h3>
+        <p class="card-description">Overkill for most people's data needs. And so complex you basically need to take a course.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security Section -->
+  <section class="security">
+    <div class="security-container">
+      <h2 class="security-title">Your data is fully encrypted, private, and secure</h2>
+      <p class="security-description">
+        We built Bricks to prioritize privacy and security. Your data is securely stored and encrypted using industry leading data protection measures. And it's never used for AI training.
+      </p>
+      <div class="security-visual">
+        <div class="security-screenshot">
+          <div class="screenshot-header"></div>
+          <div class="screenshot-sidebar">
+            <div class="sidebar-item">Unicorn List</div>
+            <div class="sidebar-item">Company Data</div>
+            <div class="sidebar-item">Dashboard</div>
+            <div class="sidebar-item">AI Chat</div>
+          </div>
+          <div class="screenshot-table">
+            <div class="table-header">
+              <span>Company</span>
+              <span>Valuation</span>
+              <span>Country</span>
+            </div>
+            <div class="table-row">
+              <span></span>
+              <span></span>
+              <span class="country-tag orange">Australia</span>
+            </div>
+            <div class="table-row">
+              <span></span>
+              <span></span>
+              <span class="country-tag green">United Kingdom</span>
+            </div>
+            <div class="table-row">
+              <span></span>
+              <span></span>
+              <span class="country-tag blue">United States</span>
+            </div>
+          </div>
+        </div>
+        <div class="security-icon">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+            <path d="M60 20L20 35V65C20 85 40 105 60 110C80 105 100 85 100 65V35L60 20Z" fill="black"/>
+            <circle cx="60" cy="80" r="25" fill="#FFDD00"/>
+            <circle cx="60" cy="80" r="15" fill="#0066FF"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <div class="cube">
+            <div class="cube-face face-front"></div>
+            <div class="cube-face face-top"></div>
+            <div class="cube-face face-right"></div>
+          </div>
+        </div>
+        <span class="logo-text">IntelleX</span>
+      </div>
+      <p class="footer-text">AI-powered data analysis made simple</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms of Service</a>
+        <a href="#" class="footer-link">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const uploadBtn = document.getElementById('upload-btn');
+      
+      // Upload CSV/Excel button functionality
+      uploadBtn.addEventListener('click', function() {
+        window.location.href = 'register.html';
+      });
+    });
+  </script>
+</body>
+</html>
+

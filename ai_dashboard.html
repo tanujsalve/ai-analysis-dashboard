@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dashboard | College Data Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-config.js?v=3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+        }
+
+        .ai-dashboard-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Left Side - Chat Area */
+        .chat-sidebar {
+            width: 400px;
+            background: #1f2937;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #374151;
+            flex-shrink: 0;
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #374151;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .chat-header h1 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: white;
+        }
+
+        .chat-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .message.user {
+            background: #374151;
+            margin-left: 1rem;
+        }
+
+        .message.ai {
+            background: #4b5563;
+            margin-right: 1rem;
+        }
+
+        .message-header {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .message.user .message-header {
+            color: #d1d5db;
+        }
+
+        .message.ai .message-header {
+            color: #60a5fa;
+        }
+
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #374151;
+            background: #1f2937;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            outline: none;
+            background: #374151;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .chat-input input:focus {
+            border-color: #3b82f6;
+        }
+
+        .chat-input input::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #2563eb;
+        }
+
+        .send-btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        /* Right Side - Analytics Area */
+        .analytics-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .analytics-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .analytics-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .back-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .analytics-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .result-table {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .result-chart {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container h3 {
+            margin: 0 0 1rem 0;
+            color: #111827;
+            font-size: 1.1rem;
+        }
+
+        .chart-container canvas {
+            max-height: 300px;
+        }
+
+        .data-table-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .data-table-container h3 {
+            margin: 0 0 1rem 0;
+            color: #111827;
+            font-size: 1.1rem;
+        }
+
+        .data-table {
+            overflow-x: auto;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .data-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .quality-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .quality-item:hover {
+            background: #f3f4f6;
+            transform: translateX(2px);
+        }
+
+        .quality-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .quality-label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .quality-value {
+            color: #3b82f6;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .suggestions {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-radius: 8px;
+            border: 1px solid #bae6fd;
+        }
+
+        .suggestions h4 {
+            margin: 0 0 0.5rem 0;
+            color: #0369a1;
+            font-size: 0.9rem;
+        }
+
+        .suggestion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .suggestion-tag {
+            background: white;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .suggestion-tag:hover {
+            background: #0369a1;
+            color: white;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            margin: 1rem 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #d1d5db;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 0.5rem 0;
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .ai-dashboard-container {
+                flex-direction: column;
+            }
+
+            .chat-sidebar {
+                width: 100%;
+                height: 50vh;
+            }
+
+            .analytics-content {
+                padding: 1rem;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-dashboard-container">
+        <!-- Left Side - Chat Area -->
+        <div class="chat-sidebar">
+            <div class="chat-header">
+                <h1><i class="fas fa-brain"></i> AI Assistant</h1>
+                <p>Ask me anything about the college data!</p>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-header">
+                        <i class="fas fa-robot"></i>
+                        AI Assistant
+                    </div>
+                    <div class="message-content">
+                        Hello! I'm your AI assistant for college data analysis. I can help you:
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                            <li>Query student information and statistics</li>
+                            <li>Analyze course enrollment data</li>
+                            <li>Create visualizations and charts</li>
+                            <li>Explore faculty and academic data</li>
+                        </ul>
+                        What would you like to know?
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <i class="fas fa-spinner fa-spin"></i> AI is thinking...
+            </div>
+
+            <div class="chat-input">
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="Ask me anything about the college data..." />
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Analytics Area -->
+        <div class="analytics-main">
+            <div class="analytics-header">
+                <h1 class="analytics-title">Analytics Dashboard</h1>
+                <a href="/user_dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+
+            <div class="analytics-content" id="analyticsContent">
+                <!-- Default summary card -->
+                <div class="result-container">
+                    <div class="result-table">
+                        <div class="data-table-container">
+                            <h3><i class="fas fa-university"></i> College Data Overview</h3>
+                            <div class="quality-item">
+                                <span class="quality-label">Total Students</span>
+                                <span class="quality-value" id="total-students">Loading...</span>
+                            </div>
+                            <div class="quality-item">
+                                <span class="quality-label">Total Courses</span>
+                                <span class="quality-value" id="total-courses">Loading...</span>
+                            </div>
+                            <div class="quality-item">
+                                <span class="quality-label">Total Faculty</span>
+                                <span class="quality-value" id="total-faculty">Loading...</span>
+                            </div>
+                            <div class="quality-item">
+                                <span class="quality-label">Branches</span>
+                                <span class="quality-value" id="total-branches">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-chart">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-chart-pie"></i> Quick Stats</h3>
+                            <canvas id="default-summary-chart" width="300" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let chartCounter = 0;
+
+        // Initialize Firebase and check authentication
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = localStorage.getItem('currentUser');
+            if (!userData) {
+                window.location.href = '/login';
+                return;
+            }
+
+            currentUser = JSON.parse(userData);
+
+            // Setup event listeners
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Load default analytics
+            loadDefaultAnalytics();
+
+            // Add some example suggestions
+            addSuggestions([
+                "How many students are in Computer Science?",
+                "Show me students by city",
+                "What courses are available?",
+                "Create a pie chart of branches",
+                "List all faculty members",
+                "Show me data inside students table"
+            ]);
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            input.value = '';
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+
+            // Send to AI API
+            fetch('/api/ai/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.remove('show');
+                
+                if (data.success) {
+                    // Add AI response
+                    addMessage('ai', data.summary || data.explanation, data);
+                    
+                    // Add suggestions if available
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        addSuggestions(data.suggestions);
+                    }
+                } else {
+                    addMessage('ai', `Sorry, I encountered an error: ${data.error}`, null, true);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.remove('show');
+                addMessage('ai', `Sorry, I couldn't process your request. Please try again.`, null, true);
+                console.error('Error:', error);
+            });
+        }
+
+        function addMessage(type, content, data = null, isError = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            
+            if (type === 'user') {
+                header.innerHTML = '<i class="fas fa-user"></i> You';
+            } else {
+                header.innerHTML = '<i class="fas fa-robot"></i> AI Assistant';
+            }
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(contentDiv);
+
+            // Add error styling
+            if (isError) {
+                messageDiv.style.background = '#dc2626';
+                messageDiv.style.color = 'white';
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Add chart and data to analytics area if available
+            if (data && (data.chart_data || data.data)) {
+                addToAnalytics(data);
+            }
+        }
+
+        function addToAnalytics(data) {
+            const analyticsContent = document.getElementById('analyticsContent');
+            
+            // Remove empty state if it exists
+            const emptyState = analyticsContent.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            // Create a result container for side-by-side display
+            const resultContainer = document.createElement('div');
+            resultContainer.className = 'result-container';
+
+            // Add data table if available
+            if (data.data && data.data.length > 0) {
+                const tableContainer = createDataTableContainer(data.data);
+                tableContainer.className += ' result-table';
+                resultContainer.appendChild(tableContainer);
+            }
+
+            // Add chart if available
+            if (data.chart_data) {
+                const chartContainer = createChartContainer(data.chart_data);
+                chartContainer.className += ' result-chart';
+                resultContainer.appendChild(chartContainer);
+            }
+
+            // Only append if we have content
+            if (resultContainer.children.length > 0) {
+                analyticsContent.appendChild(resultContainer);
+            }
+        }
+
+        function createChartContainer(chartData) {
+            chartCounter++;
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+
+            const title = document.createElement('h3');
+            title.textContent = chartData.title || 'Chart';
+            container.appendChild(title);
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'chart_' + chartCounter;
+            container.appendChild(canvas);
+
+            // Create chart using Chart.js
+            setTimeout(() => {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: chartData.type || 'bar',
+                    data: {
+                        labels: chartData.labels || [],
+                        datasets: [{
+                            label: chartData.title || 'Data',
+                            data: chartData.data || [],
+                            backgroundColor: chartData.colors || ['#3b82f6'],
+                            borderColor: chartData.colors || ['#3b82f6'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: chartData.type === 'pie'
+                            },
+                            title: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }, 100);
+
+            return container;
+        }
+
+        function createDataTableContainer(data) {
+            const container = document.createElement('div');
+            container.className = 'data-table-container';
+
+            const title = document.createElement('h3');
+            title.textContent = 'Data Results';
+            container.appendChild(title);
+
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'data-table';
+
+            const table = document.createElement('table');
+            
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            if (data.length > 0) {
+                Object.keys(data[0]).forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key.replace(/_/g, ' ').toUpperCase();
+                    headerRow.appendChild(th);
+                });
+            }
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create body
+            const tbody = document.createElement('tbody');
+            data.slice(0, 20).forEach(row => { // Limit to 20 rows
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(tbody);
+            tableDiv.appendChild(table);
+
+            if (data.length > 20) {
+                const note = document.createElement('p');
+                note.style.textAlign = 'center';
+                note.style.color = '#6b7280';
+                note.style.fontSize = '0.9rem';
+                note.style.marginTop = '1rem';
+                note.textContent = `Showing first 20 of ${data.length} results`;
+                tableDiv.appendChild(note);
+            }
+
+            container.appendChild(tableDiv);
+            return container;
+        }
+
+        function addSuggestions(suggestions) {
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            // Remove existing suggestions
+            const existingSuggestions = messagesContainer.querySelector('.suggestions');
+            if (existingSuggestions) {
+                existingSuggestions.remove();
+            }
+
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'suggestions';
+            
+            const title = document.createElement('h4');
+            title.textContent = 'Try asking:';
+            suggestionsDiv.appendChild(title);
+
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'suggestion-tags';
+
+            suggestions.forEach(suggestion => {
+                const tag = document.createElement('span');
+                tag.className = 'suggestion-tag';
+                tag.textContent = suggestion;
+                tag.onclick = () => {
+                    document.getElementById('chatInput').value = suggestion;
+                    sendMessage();
+                };
+                tagsContainer.appendChild(tag);
+            });
+
+            suggestionsDiv.appendChild(tagsContainer);
+            messagesContainer.appendChild(suggestionsDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login';
+            }
+        }
+
+        function loadDefaultAnalytics() {
+            // Load summary statistics first
+            loadSummaryStats();
+
+            // Load multiple default analytics about college data
+            const defaultQueries = [
+                "show me students by branch",
+                "show me students by city",
+                "show me courses by branch"
+            ];
+
+            // Load each query and add to analytics
+            defaultQueries.forEach((query, index) => {
+                setTimeout(() => {
+                    fetch('/api/ai/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            question: query
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Add the analytics to the analytics area
+                            addToAnalytics(data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading default analytics:', error);
+                    });
+                }, (index + 1) * 1000); // Stagger the requests after summary
+            });
+        }
+
+        function loadSummaryStats() {
+            // Load basic counts for the summary
+            const summaryQueries = [
+                "count total students",
+                "count total courses", 
+                "count total faculty",
+                "list all branches"
+            ];
+
+            Promise.all(summaryQueries.map(query => 
+                fetch('/api/ai/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: query
+                    })
+                }).then(response => response.json())
+            ))
+            .then(results => {
+                // Update summary statistics
+                const studentCount = results[0].success ? results[0].data.length : 0;
+                const courseCount = results[1].success ? results[1].data.length : 0;
+                const facultyCount = results[2].success ? results[2].data.length : 0;
+                const branches = results[3].success ? results[3].data.length : 0;
+
+                document.getElementById('total-students').textContent = studentCount;
+                document.getElementById('total-courses').textContent = courseCount;
+                document.getElementById('total-faculty').textContent = facultyCount;
+                document.getElementById('total-branches').textContent = branches;
+
+                // Create summary chart
+                createSummaryChart(studentCount, courseCount, facultyCount);
+            })
+            .catch(error => {
+                console.error('Error loading summary stats:', error);
+            });
+        }
+
+        function createSummaryChart(students, courses, faculty) {
+            const ctx = document.getElementById('default-summary-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Students', 'Courses', 'Faculty'],
+                    datasets: [{
+                        data: [students, courses, faculty],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                        borderColor: ['#2563eb', '#059669', '#d97706'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
